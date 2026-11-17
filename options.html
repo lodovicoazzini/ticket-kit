@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket Kit options</title>
+<link rel="stylesheet" href="options.css">
+<script type="module" src="options.js"></script>
+</head>
+<body>
+<main class="page">
+  <header class="head">
+    <img src="icons/icon48.png" width="40" height="40" alt="">
+    <div>
+      <h1>Ticket Kit</h1>
+      <p class="sub">Options. Changes save as you type and sync with your browser profile.</p>
+    </div>
+  </header>
+
+  <section class="card" aria-labelledby="ph-h">
+    <h2 id="ph-h">Placeholders</h2>
+    <p class="help">Click one to insert it into the field you edited last. Values are from a sample ticket.</p>
+    <div class="placeholders" id="placeholders"></div>
+  </section>
+
+  <section class="card" aria-labelledby="default-h">
+    <h2 id="default-h">Default copy</h2>
+    <p class="help">What <span id="shortcut-inline">the shortcut</span> and a click on the toolbar icon copy.</p>
+
+    <div class="field">
+      <label for="linkText">Link text</label>
+      <input type="text" id="linkText" spellcheck="false" autocomplete="off">
+      <p class="help">The link always points to the ticket URL. Rich editors like Teams, Outlook and Confluence show this text.</p>
+      <p class="msg" id="linkText-msg"></p>
+      <div class="out out-rich" id="linkText-out"></div>
+    </div>
+
+    <div class="field">
+      <label for="plainText">Plain-text version</label>
+      <input type="text" id="plainText" spellcheck="false" autocomplete="off">
+      <p class="help">Pasted where only plain text is accepted, such as a commit dialog or a terminal.</p>
+      <p class="msg" id="plainText-msg"></p>
+      <div class="out" id="plainText-out"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="extra-h">
+    <h2 id="extra-h">Extra formats</h2>
+    <p class="help">Right-click the toolbar icon to copy in one of these. Both copy plain text only.</p>
+
+    <div class="field">
+      <label for="markdown">Copy as Markdown</label>
+      <input type="text" id="markdown" spellcheck="false" autocomplete="off">
+      <p class="help">Brackets in the values are escaped, the URL is left as is.</p>
+      <p class="msg" id="markdown-msg"></p>
+      <div class="out" id="markdown-out"></div>
+    </div>
+
+    <div class="field">
+      <label for="url">Copy URL</label>
+      <input type="text" id="url" spellcheck="false" autocomplete="off">
+      <p class="msg" id="url-msg"></p>
+      <div class="out" id="url-out"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="branch-h">
+    <h2 id="branch-h">Branch names</h2>
+    <p class="help">"Copy branch name" builds <code>prefix/KEY-short-summary</code>. The prefix depends on the issue type. In the action menu you can always pick one of the other prefixes too.</p>
+    <div class="field">
+      <label for="branchRules">Prefix by issue type</label>
+      <textarea id="branchRules" rows="4" spellcheck="false" autocomplete="off"></textarea>
+      <p class="help">One rule per line, like <code>Bug = bugfix</code> or <code>Task = chore</code>. Type names are matched without regard to case. Leave the prefix empty for no prefix.</p>
+      <p class="msg" id="branchRules-msg"></p>
+    </div>
+    <div class="field">
+      <label for="branchDefaultPrefix">Prefix for every other type</label>
+      <input type="text" id="branchDefaultPrefix" spellcheck="false" autocomplete="off">
+      <p class="help">Leave it empty for branch names without a prefix.</p>
+      <div class="out" id="branch-out"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="site-h">
+    <h2 id="site-h">Jira site</h2>
+    <div class="field">
+      <label for="jiraSite">Your Jira Cloud site</label>
+      <input type="text" id="jiraSite" spellcheck="false" autocomplete="off" placeholder="your-team.atlassian.net">
+      <p class="help">Filled in the first time you use Ticket Kit on a Jira tab. Used where there is no Jira tab to go by: "Open in Jira" on selected text, the j keyword in the address bar, and ticket search in the menu.</p>
+      <p class="msg" id="jiraSite-msg"></p>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="sc-h">
+    <h2 id="sc-h">Shortcuts</h2>
+    <dl class="shortcuts" id="shortcuts"></dl>
+    <div class="row">
+      <button type="button" class="btn" id="change-shortcut">Change shortcuts</button>
+    </div>
+    <p class="help">The browser manages extension shortcuts on its own page. In Dia, set each one's scope to Global there, and pick combinations no other app uses.</p>
+  </section>
+
+  <footer class="foot">
+    <button type="button" class="btn" id="reset">Reset to defaults</button>
+    <span class="status" id="status" role="status" aria-live="polite"></span>
+  </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "ticket-kit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "package": "tools/package.sh",
+    "screenshots": "tools/screenshots.sh"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lodovicoazzini/ticket-kit.git"
+  }
+}

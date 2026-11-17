@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ticket Kit screenshot</title>
+<!-- Rendered at 1280x800 by tools/screenshots.sh. ?scene= picks the screen. Tickets are made up. -->
+<style>
+  :root {
+    --blue: #1f5bd1; --ink: #17202c; --muted: #586374; --line: #d6dce4; --page: #ffffff; --band: #eef2f8; --link: #1a56c4;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+  body { font: 15px/1.5 var(--sans); color: var(--ink); background: var(--band); display: grid; grid-template-rows: 168px 1fr; }
+  .band { display: flex; align-items: center; gap: 24px; padding: 0 64px; }
+  .band img { width: 72px; height: 72px; }
+  .band h1 { margin: 0; font-size: 34px; line-height: 1.15; letter-spacing: -.01em; }
+  .band p { margin: 6px 0 0; font-size: 18px; color: var(--muted); max-width: 900px; }
+  .window { margin: 0 64px; border: 1px solid var(--line); border-bottom: 0; border-radius: 14px 14px 0 0; background: var(--page); overflow: hidden; position: relative; box-shadow: 0 10px 40px rgba(18, 28, 45, .12); }
+  .chrome { height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: #e9edf2; border-bottom: 1px solid var(--line); }
+  .dots { display: flex; gap: 7px; } .dots i { width: 11px; height: 11px; border-radius: 50%; background: #c8cfd8; display: block; }
+  .url { flex: 1; height: 28px; border-radius: 14px; background: #fff; font: 13px/28px var(--mono); color: var(--muted); padding: 0 14px; }
+  .ext { width: 18px; height: 18px; position: relative; }
+  .ext img { width: 18px; height: 18px; display: block; }
+  .ext b { position: absolute; right: -7px; bottom: -6px; background: #17794a; color: #fff; font: 700 9px/13px var(--sans); border-radius: 3px; padding: 0 3px; }
+  .stage { position: relative; height: calc(100% - 44px); }
+  .ticket { padding: 28px 36px; display: grid; grid-template-columns: 1fr 280px; gap: 32px; }
+  .crumbs { font-size: 13px; color: var(--muted); }
+  .ticket h2 { margin: 6px 0 18px; font-size: 24px; line-height: 1.3; }
+  .skel { display: grid; gap: 11px; } .skel i { display: block; height: 10px; border-radius: 5px; background: #edf0f4; }
+  .side { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; font-size: 13.5px; align-content: start; }
+  .side span { color: var(--muted); display: block; font-size: 12px; }
+  .menu { position: absolute; inset: 0; border: 0; width: 100%; height: 100%; }
+  .paste { position: absolute; left: 36px; right: 36px; top: 150px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .pane { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 16px 18px; display: grid; gap: 10px; box-shadow: 0 6px 24px rgba(18, 28, 45, .1); }
+  .pane .lbl { font-size: 12.5px; color: var(--muted); }
+  .pane .msg { font-size: 15px; } .pane a { color: var(--link); }
+  .term { background: #1b2531; color: #e5eaf1; border-radius: 8px; padding: 12px 14px; font: 13px/1.6 var(--mono); }
+  .term .p { color: #7ea8ff; }
+  ul.rich { margin: 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; } ul.rich a { color: var(--link); }
+</style>
+</head>
+<body>
+<header class="band">
+  <img src="../../icons/icon128.png" alt="">
+  <div><h1 id="title"></h1><p id="sub"></p></div>
+</header>
+<div class="window">
+  <div class="chrome">
+    <span class="dots"><i></i><i></i><i></i></span>
+    <span class="url" id="url">your-team.atlassian.net/browse/PAY-1284</span>
+    <span class="ext"><img src="../../icons/icon32.png" alt=""><b id="badge" hidden>✓</b></span>
+  </div>
+  <div class="stage" id="stage">
+    <div class="ticket">
+      <div>
+        <div class="crumbs">Payments / PAY-1284</div>
+        <h2>Refund export skips orders with an ampersand in the customer name</h2>
+        <div class="skel"><i style="width:96%"></i><i style="width:90%"></i><i style="width:93%"></i><i style="width:58%"></i><i style="width:88%"></i><i style="width:71%"></i></div>
+      </div>
+      <div class="side">
+        <div><span>Type</span>Bug</div>
+        <div><span>Status</span>In Progress</div>
+        <div><span>Development</span>3 branches, 4 pull requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { showToast } from '../../lib/inject.js';
+
+  const scene = new URLSearchParams(location.search).get('scene') || 'menu';
+  const CAPTIONS = {
+    menu: ['Every Jira action, one shortcut away', '⌥⇧K opens a menu over the ticket. Type to filter it, or type a key to open that ticket.'],
+    filter: ['Type a few letters, run it with Enter', 'Copy the link, the Markdown or the URL, copy a branch name, or open the pull request.'],
+    branch: ['Branch names straight from the ticket', 'Your prefix for each issue type, plus the branches already linked in Jira. ⌥↵ copies the git command.'],
+    pr: ['Jump to the pull request', 'With one open pull request it opens right away. Otherwise pick from open, merged and declined.'],
+    copied: ['Links named after the ticket', 'Rich editors get "PAY-1284 - Summary" as a link. Plain-text places get the text. Whole searches copy as a list.'],
+  };
+  const [title, sub] = CAPTIONS[scene] ?? CAPTIONS.menu;
+  document.getElementById('title').textContent = title;
+  document.getElementById('sub').textContent = sub;
+
+  const stage = document.getElementById('stage');
+  if (scene === 'copied') {
+    document.getElementById('badge').hidden = false;
+    const paste = document.createElement('div');
+    paste.className = 'paste';
+    paste.innerHTML = `
+      <div class="pane"><div class="lbl">Pasted into a chat message</div>
+        <div class="msg">Fixed in <a href="#">PAY-1284 - Refund export skips orders with an ampersand in the customer name</a>, ready for review.</div>
+        <div class="lbl">A search, copied as a list</div>
+        <ul class="rich"><li><a href="#">PAY-1284 - Refund export skips orders with an ampersand…</a></li>
+          <li><a href="#">PAY-1279 - Currency rounding differs between invoice and receipt</a></li>
+          <li><a href="#">PAY-1266 - Retry failed webhook deliveries after a timeout</a></li></ul></div>
+      <div class="pane"><div class="lbl">Pasted into a terminal</div>
+        <div class="term"><span class="p">$</span> git commit -m "PAY-1284 - Refund export skips orders with an ampersand in the customer name"<br><br><span class="p">$</span> git switch -c bugfix/PAY-1284-refund-export-skips-orders-with-an</div></div>`;
+    stage.append(paste);
+    // Keep the notice on screen for the screenshot instead of letting it time out.
+    const realTimeout = window.setTimeout;
+    window.setTimeout = () => 0;
+    showToast('ok', 'Copied PAY-1284', 'PAY-1284 - Refund export skips orders with an ampersand in the customer name');
+    window.setTimeout = realTimeout;
+  } else {
+    const level = scene === 'branch' || scene === 'pr' ? scene : 'root';
+    const frame = document.createElement('iframe');
+    frame.className = 'menu';
+    frame.src = `menu-frame.html?tab=1&mode=overlay&level=${level}&scene=${scene}`;
+    stage.append(frame);
+  }
+</script>
+</body>
+</html>
