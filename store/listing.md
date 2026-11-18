@@ -11,7 +11,7 @@ Images are in `store/images/`. Rebuild them with `npm run screenshots`, rebuild 
 
 **Summary** (from the manifest description, 132 characters at most):
 
-> Copies Jira tickets as links, copies branch names and search results, and opens tickets and pull requests.
+> Copy Jira tickets to the clipboard as links, copy branch names and search results, and open tickets and pull requests.
 
 **Category:** Developer Tools
 
@@ -20,18 +20,18 @@ Images are in `store/images/`. Rebuild them with `npm run screenshots`, rebuild 
 **Description:**
 
 ```
-Ticket Kit puts the things you do with a Jira ticket on one shortcut.
+Ticket Kit copies Jira tickets to your clipboard and puts the other things you do with a ticket on one shortcut.
 
 Press Alt+Shift+K on a Jira ticket and a menu opens over the page. Type a few letters to find an action, or type a ticket key to open that ticket.
 
 COPY
-• Copy the ticket as a link named "PAY-1284 - Summary". Teams, Outlook, Slack and Confluence paste it as a clickable title; terminals and commit dialogs get the plain text.
+• Copy the ticket as a link named "PAY-1284 - Summary". Teams, Outlook, Slack and Confluence paste it as a clickable title; terminals and commit dialogs get the plain text. Make only the key clickable if you prefer.
 • Copy as Markdown or as the bare URL.
 • Copy a whole Jira search or saved filter as a bulleted list of links, up to 100 tickets.
-• Copy a branch name built from the ticket, like bugfix/PAY-1284-refund-export-skips-orders. You set the prefix per issue type (bugfix, fix, chore, none), and the branches already linked in Jira are one keystroke away. Alt+Enter copies the git switch command instead.
+• Copy a branch name built from the ticket, like bugfix/PAY-1284-refund-export-skips-orders. You set its shape with a template and the prefix per issue type (bugfix, fix, chore, none), and the branches already linked in Jira are one keystroke away. Alt+Enter copies the git switch command instead.
 
 OPEN
-• Open the ticket's pull request. With one open pull request it opens straight away; otherwise pick from the list.
+• Open the ticket's pull request. With one open pull request it opens straight away; otherwise pick from the list, or open all of them in tabs with Shift+Enter.
 • Select a ticket key on any page, right-click, and choose "Open in Jira".
 • Type j and a space in the address bar, then a key or a few words, to open or find a ticket.
 
@@ -39,7 +39,7 @@ SHORTCUTS
 Alt+Shift+K opens the menu, Alt+Shift+J copies the link, Alt+Shift+B copies a branch name, Alt+Shift+P opens the pull request. Change them on the browser's extension shortcuts page.
 
 SETTINGS
-The link text, the plain-text version and the Markdown format are templates you can change, with placeholders for key, summary, URL, type, status and project. Branch prefixes are set per issue type. Your Jira site is detected the first time you use Ticket Kit on it.
+The link text, the plain-text version and the Markdown format are templates you can change, with placeholders for key, summary, URL, type, status and project. Branch names have their own template, and prefixes are set per issue type. Your Jira site is detected the first time you use Ticket Kit on it.
 
 PRIVACY
 Ticket Kit talks only to your own Jira site, from your browser, with your existing login. It has no server, sends nothing to its developer or anyone else, and collects no analytics. It works with Jira Cloud sites on atlassian.net. Self-hosted Jira Server and Data Center are not supported.

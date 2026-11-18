@@ -12,10 +12,10 @@ Self-hosted Jira (Server or Data Center) isn't supported.
 | Action | Default shortcut | Result |
 |---|---|---|
 | Open the action menu | Alt+Shift+K | A menu over the page with every action for the tab. Type to filter, type a key like `PAY-1284` to open it, or type words to search Jira. |
-| Copy link | Alt+Shift+J, or click the toolbar icon | A rich link reading `PAY-1284 - Summary`. Teams, Outlook, Slack and Confluence paste it as a link; terminals and commit dialogs get the plain text. |
+| Copy link | Alt+Shift+J, or click the toolbar icon | A rich link reading `PAY-1284 - Summary`, or with only the key clickable if you set it up that way. Teams, Outlook, Slack and Confluence paste it as a link; terminals and commit dialogs get the plain text. |
 | Copy as Markdown, Copy URL | none | In the menu, and on the toolbar icon's right-click menu. |
-| Copy branch name | Alt+Shift+B | `bugfix/PAY-1284-refund-export-skips-orders-with-an`. The prefix follows your rules per issue type. In the menu you also get the other prefixes and the branches already linked in Jira. Alt+Enter copies `git switch -c ...` instead. |
-| Open pull request | Alt+Shift+P | Opens the ticket's only open pull request, or lists them all (open, merged, declined) in the menu. |
+| Copy branch name | Alt+Shift+B | `bugfix/PAY-1284-refund-export-skips-orders-with-an`. The shape follows your template, the prefix your rules per issue type. In the menu you also get the other prefixes and the branches already linked in Jira. Alt+Enter copies `git switch -c ...` instead. |
+| Open pull request | Alt+Shift+P | Opens the ticket's only open pull request, or lists them all (open, merged, declined) in the menu. Shift+Enter in the list opens every pull request it shows, each in its own tab. A setting makes the shortcut open all the open ones straight away. |
 | Copy results as a list | none, set your own | On a Jira search, saved filter or list view: up to 100 tickets as a bulleted list of links. "Copy results as Markdown" gives `- [KEY - Summary](url)` lines. |
 | Open in Jira | right-click selected text | Opens the key in the selection. Several keys open one search. Works on any site. |
 | Address bar keyword | type `j` and a space | `j PAY-1284` opens the ticket; `j refund export` suggests matching tickets. |
@@ -60,8 +60,17 @@ Right-click the toolbar icon and pick **Options**. Settings sync with your brows
 | Copy as Markdown | `[{key} - {summary}]({url})` |
 | Copy URL | `{url}` |
 
-**Branch names.** One rule per line, `Issue type = prefix`, plus a prefix for every other type. Leave a prefix empty for
-branch names without one. Defaults: `Bug = bugfix`, everything else `feature`. A team that uses `fix/` and `chore/`
+The whole link text links to the ticket. To make only part of it clickable, write that part as a Markdown link:
+`[{key}]({url}) - {summary}` pastes as a link reading `PAY-1284` followed by the summary as plain text. Square
+brackets without `(url)` right after them are ordinary characters, so `[{key}] {summary}` is still one link.
+
+**Branch names.** A template, `{prefix}/{key}-{summary}` by default, with `{prefix}`, `{key}`, `{summary}` and `{type}`.
+`{summary}` is the summary in lowercase words joined by dashes, up to 40 characters. When the prefix or the summary is
+empty, the `/`, `-` or `_` next to it goes too, and characters git refuses become dashes. Examples: `{prefix}/{key}`
+gives `bugfix/PAY-1284`, `{key}_{summary}` gives `PAY-1284_refund-export-skips-orders-with-an`.
+
+The prefix comes from one rule per line, `Issue type = prefix`, plus a prefix for every other type. Leave a prefix empty
+for branch names without one. Defaults: `Bug = bugfix`, everything else `feature`. A team that uses `fix/` and `chore/`
 might write:
 
 ```
@@ -69,6 +78,9 @@ Bug = fix
 Task = chore
 Spike =
 ```
+
+**Pull requests.** With several open pull requests on a ticket, the Open pull request shortcut shows the list
+(the default) or opens all the open ones in new tabs.
 
 **Jira site.** Your Jira Cloud address, like `your-team.atlassian.net`. Ticket Kit fills it in the first time you use it
 on a Jira tab. It's used where there's no Jira tab to go by: "Open in Jira" on selected text, the `j` keyword, and ticket
@@ -120,10 +132,14 @@ After changing the code, click the reload arrow on the extension's card in `chro
 Manual checks before a release, on a Jira Cloud site of your own:
 
 - [ ] On a ticket, Alt+Shift+J copies the link. Pasted into a rich editor it's a link; into a terminal it's text.
+- [ ] With Link text `[{key}]({url}) - {summary}`, the pasted link covers only the key and the summary is plain text.
 - [ ] Right-click the icon: Copy as Markdown escapes brackets in the summary; Copy URL gives `/browse/KEY`.
 - [ ] Alt+Shift+K opens the menu; typing filters it; Escape closes it; Alt+Shift+K again closes it too.
 - [ ] Alt+Shift+B copies a branch name with the prefix your rules give that issue type. The menu lists the other prefixes and existing branches; Alt+Enter copies the git command.
+- [ ] With Branch name `{prefix}/{key}`, Alt+Shift+B copies `bugfix/KEY` on a bug.
 - [ ] Alt+Shift+P opens the only open pull request, or the list. A ticket without pull requests shows "No pull request linked".
+- [ ] In the pull request list, Enter opens the selected one; Shift+Enter opens all shown in tabs after the Jira tab; typing "open" first limits it to the open ones.
+- [ ] With the Pull requests setting on "opens all the open ones", Alt+Shift+P on a ticket with two open pull requests opens both.
 - [ ] On a search, Copy results as a list copies the tickets in screen order. Off a search, the menu has no "This search" group.
 - [ ] Select a key on another site, right-click, Open in Jira opens it. Two keys open one search.
 - [ ] `j KEY` in the address bar opens the ticket; `j some words` suggests tickets.

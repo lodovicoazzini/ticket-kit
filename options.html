@@ -30,7 +30,7 @@
     <div class="field">
       <label for="linkText">Link text</label>
       <input type="text" id="linkText" spellcheck="false" autocomplete="off">
-      <p class="help">The link always points to the ticket URL. Rich editors like Teams, Outlook and Confluence show this text.</p>
+      <p class="help">Rich editors like Teams, Outlook and Confluence show this text, and all of it links to the ticket. To make only part of it clickable, write that part as <code>[text]({url})</code>. For example, <code>[{key}]({url}) - {summary}</code> links only the key.</p>
       <p class="msg" id="linkText-msg"></p>
       <div class="out out-rich" id="linkText-out"></div>
     </div>
@@ -66,7 +66,14 @@
 
   <section class="card" aria-labelledby="branch-h">
     <h2 id="branch-h">Branch names</h2>
-    <p class="help">"Copy branch name" builds <code>prefix/KEY-short-summary</code>. The prefix depends on the issue type. In the action menu you can always pick one of the other prefixes too.</p>
+    <p class="help">"Copy branch name" fills in this template. The prefix depends on the issue type. In the action menu you can always pick one of the other prefixes too.</p>
+    <div class="field">
+      <label for="branchTemplate">Branch name</label>
+      <input type="text" id="branchTemplate" spellcheck="false" autocomplete="off">
+      <div class="placeholders" id="branch-placeholders"></div>
+      <p class="help">The summary becomes lowercase words joined by dashes, up to 40 characters. When the prefix or the summary is empty, the <code>/</code>, <code>-</code> or <code>_</code> next to it goes too. Characters git refuses become dashes.</p>
+      <p class="msg" id="branchTemplate-msg"></p>
+    </div>
     <div class="field">
       <label for="branchRules">Prefix by issue type</label>
       <textarea id="branchRules" rows="4" spellcheck="false" autocomplete="off"></textarea>
@@ -78,6 +85,18 @@
       <input type="text" id="branchDefaultPrefix" spellcheck="false" autocomplete="off">
       <p class="help">Leave it empty for branch names without a prefix.</p>
       <div class="out" id="branch-out"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="pr-h">
+    <h2 id="pr-h">Pull requests</h2>
+    <div class="field">
+      <label for="prShortcut">When a ticket has several open pull requests, <span id="pr-shortcut-inline">the Open pull request shortcut</span></label>
+      <select id="prShortcut">
+        <option value="list">shows the list</option>
+        <option value="all">opens all the open ones in new tabs</option>
+      </select>
+      <p class="help">One open pull request always opens straight away. In the list, Shift+Enter opens every pull request it shows; type first to narrow it, for example "open" or a repository name.</p>
     </div>
   </section>
 

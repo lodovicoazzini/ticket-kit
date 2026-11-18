@@ -1,6 +1,6 @@
 import {
-  DEFAULT_SETTINGS, PLACEHOLDERS, branchName, branchPrefix, buildClipboard, parseBranchRules, siteOrigin, ticketValues,
-  unknownPlaceholders,
+  BRANCH_PLACEHOLDERS, DEFAULT_SETTINGS, PLACEHOLDERS, branchName, branchPrefix, buildClipboard, linkParts,
+  parseBranchRules, siteOrigin, ticketValues, unknownPlaceholders,
 } from './lib/format.js';
 
 // A made-up ticket whose summary has the characters that need escaping.
@@ -12,6 +12,8 @@ const SAMPLE_TICKET = {
   project: 'Payments',
 };
 const SAMPLE = ticketValues(SAMPLE_TICKET, 'https://your-team.atlassian.net');
+const BRANCH_SAMPLE = { prefix: 'bugfix', key: 'PAY-1284', summary: 'refund-export-skips-orders-with-an', type: 'bug' };
+const BRANCH_SUMMARY = 'Refund export skips orders with an ampersand';
 
 const FIELDS = Object.keys(DEFAULT_SETTINGS);
 const TEMPLATE_FIELDS = ['linkText', 'plainText', 'markdown', 'url'];
@@ -34,10 +36,19 @@ async function init() {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = `{${name}}`;
-    button.addEventListener('click', () => insert(`{${name}}`));
+    button.addEventListener('click', () => insert(`{${name}}`, lastTemplateField ?? $('linkText')));
     const value = document.createElement('span');
     value.textContent = SAMPLE[name];
     $('placeholders').append(button, value);
+  }
+  for (const name of BRANCH_PLACEHOLDERS) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `{${name}}`;
+    button.addEventListener('click', () => insert(`{${name}}`, $('branchTemplate')));
+    const value = document.createElement('span');
+    value.textContent = BRANCH_SAMPLE[name];
+    $('branch-placeholders').append(button, value);
   }
 
   $('reset').addEventListener('click', async () => {
@@ -53,8 +64,7 @@ async function init() {
   render();
 }
 
-function insert(token) {
-  const input = lastTemplateField ?? $('linkText');
+function insert(token, input) {
   const start = input.selectionStart ?? input.value.length;
   const end = input.selectionEnd ?? start;
   input.value = input.value.slice(0, start) + token + input.value.slice(end);
@@ -72,12 +82,15 @@ function render() {
   const settings = currentSettings();
   const link = buildClipboard('link', SAMPLE, settings);
 
-  const anchor = document.createElement('a');
-  anchor.href = SAMPLE.url;
-  anchor.target = '_blank';
-  anchor.rel = 'noopener';
-  anchor.textContent = link.preview;
-  $('linkText-out').replaceChildren(anchor);
+  $('linkText-out').replaceChildren(...link.pieces.map((piece) => {
+    if (!piece.href) return piece.text;
+    const anchor = document.createElement('a');
+    anchor.href = piece.href;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener';
+    anchor.textContent = piece.text;
+    return anchor;
+  }));
   $('plainText-out').textContent = link.text;
   $('markdown-out').textContent = buildClipboard('markdown', SAMPLE, settings).text;
   $('url-out').textContent = buildClipboard('url', SAMPLE, settings).text;
@@ -87,8 +100,25 @@ function render() {
   const examples = [...rules.map((r) => r.type), 'Story'].filter((t, i, all) => all.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
   const width = Math.max(...examples.map((t) => t.length)) + 1;
   $('branch-out').textContent = examples
-    .map((type) => `${`${type}:`.padEnd(width + 1)}${branchName(branchPrefix(type, settings), SAMPLE_TICKET.key, 'Refund export skips orders with an ampersand')}`)
+    .map((type) => `${`${type}:`.padEnd(width + 1)}${branchName(branchPrefix(type, settings), SAMPLE_TICKET.key, BRANCH_SUMMARY,
+      { template: settings.branchTemplate, type })}`)
     .join('\n');
+  const branchTemplate = settings.branchTemplate;
+  const unknownBranch = unknownPlaceholders(branchTemplate, BRANCH_PLACEHOLDERS);
+  const branchMsg = $('branchTemplate-msg');
+  $('branchTemplate').setAttribute('aria-invalid', String(unknownBranch.length > 0));
+  if (unknownBranch.length) {
+    branchMsg.dataset.kind = 'err';
+    branchMsg.textContent = `Unknown placeholder ${unknownBranch.map((n) => `{${n}}`).join(', ')}. Use {prefix}, {key}, {summary} or {type}.`;
+  } else if (!branchTemplate.trim()) {
+    branchMsg.dataset.kind = 'warn';
+    branchMsg.textContent = `Empty. Branch names use ${DEFAULT_SETTINGS.branchTemplate}.`;
+  } else if (!branchTemplate.includes('{key}')) {
+    branchMsg.dataset.kind = 'warn';
+    branchMsg.textContent = 'No {key}. Jira links a branch to its ticket only when the key is in the name.';
+  } else {
+    branchMsg.textContent = '';
+  }
   $('branchRules-msg').dataset.kind = 'err';
   $('branchRules-msg').textContent = errors.length
     ? `Line ${errors.join(', ')} ${errors.length === 1 ? 'is' : 'are'} ignored. Write each rule as "Issue type = prefix".`
@@ -110,6 +140,9 @@ function render() {
     if (unknown.length) {
       msg.dataset.kind = 'err';
       msg.textContent = `Unknown placeholder ${unknown.map((n) => `{${n}}`).join(', ')}. It is copied as typed.`;
+    } else if (id === 'linkText' && linkParts(value).some((p) => p.url !== undefined && !/^https:\/\//i.test(p.url.replaceAll('{url}', SAMPLE.url)))) {
+      msg.dataset.kind = 'warn';
+      msg.textContent = 'A [text](address) part whose address does not start with https:// is copied as plain text.';
     } else if (!value.trim()) {
       msg.dataset.kind = 'warn';
       msg.textContent = {
@@ -167,4 +200,6 @@ async function showShortcuts() {
   }
   const copyLink = commands.find((c) => c.name === 'copy-link')?.shortcut;
   $('shortcut-inline').textContent = copyLink ? `the shortcut (${copyLink})` : 'the shortcut';
+  const openPr = commands.find((c) => c.name === 'open-pr')?.shortcut;
+  $('pr-shortcut-inline').textContent = openPr ? `the Open pull request shortcut (${openPr})` : 'the Open pull request shortcut';
 }

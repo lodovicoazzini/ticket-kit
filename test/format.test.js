@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEFAULT_SETTINGS, buildClipboard, extractKey, fillTemplate, ticketValues, unknownPlaceholders,
+  DEFAULT_SETTINGS, buildClipboard, buildListClipboard, extractKey, fillTemplate, linkParts, ticketValues,
+  unknownPlaceholders,
 } from '../lib/format.js';
 
 const ORIGIN = 'https://your-team.atlassian.net';
@@ -88,4 +89,58 @@ test('custom templates can use type, status and project; unknown placeholders st
   assert.equal(fillTemplate('[{type}] {key} {summary} ({status}, {project}) {nope}', values),
     '[Bug] PAY-3 Three (Prepare, Payments) {nope}');
   assert.deepEqual(unknownPlaceholders('{key} {nope} {nope} {summary} {other}'), ['nope', 'other']);
+});
+
+test('[text](url) in the link text makes only that part clickable', () => {
+  const values = ticketValues({ key: 'PAY-9678', summary: 'Refund <export> & retry', status: 'Done' }, ORIGIN);
+  const link = (linkText) => buildClipboard('link', values, { ...DEFAULT_SETTINGS, linkText });
+  const href = `${ORIGIN}/browse/PAY-9678`;
+
+  const keyOnly = link('[{key}]({url}) - {summary}');
+  assert.equal(keyOnly.html, `<a href="${href}">PAY-9678</a> - Refund &lt;export&gt; &amp; retry`);
+  assert.equal(keyOnly.preview, 'PAY-9678 - Refund <export> & retry');
+  assert.equal(keyOnly.text, 'PAY-9678 - Refund <export> & retry');
+  assert.deepEqual(keyOnly.pieces, [{ text: 'PAY-9678', href }, { text: ' - Refund <export> & retry' }]);
+
+  assert.equal(link('{key} - [{summary}]({url})').html, `PAY-9678 - <a href="${href}">Refund &lt;export&gt; &amp; retry</a>`);
+  assert.equal(link('[{key}]({url}) [board](https://your-team.atlassian.net/jira/boards/1)').html,
+    `<a href="${href}">PAY-9678</a> <a href="https://your-team.atlassian.net/jira/boards/1">board</a>`);
+});
+
+test('square brackets without (url) stay characters, and the whole text stays the link', () => {
+  const values = ticketValues({ key: 'PAY-1', summary: 'One' }, ORIGIN);
+  assert.equal(buildClipboard('link', values, { ...DEFAULT_SETTINGS, linkText: '[{key}] {summary}' }).html,
+    `<a href="${ORIGIN}/browse/PAY-1">[PAY-1] One</a>`);
+  assert.deepEqual(linkParts('{key} - {summary}'), [{ text: '{key} - {summary}', url: '{url}' }]);
+  assert.deepEqual(linkParts('[{key}]({url}) - {summary}'), [{ text: '{key}', url: '{url}' }, { text: ' - {summary}' }]);
+});
+
+test('brackets in a summary never make a link', () => {
+  const values = ticketValues({ key: 'PAY-1', summary: '[docs](https://evil.example) broken' }, ORIGIN);
+  assert.equal(buildClipboard('link', values).html,
+    `<a href="${ORIGIN}/browse/PAY-1">PAY-1 - [docs](https://evil.example) broken</a>`);
+  assert.equal(buildClipboard('link', values, { ...DEFAULT_SETTINGS, linkText: '[{key}]({url}) {summary}' }).html,
+    `<a href="${ORIGIN}/browse/PAY-1">PAY-1</a> [docs](https://evil.example) broken`);
+});
+
+test('a link part without an https address is plain text; with no link left, all of it links to the ticket', () => {
+  const values = ticketValues({ key: 'PAY-1', summary: 'One' }, ORIGIN);
+  assert.equal(buildClipboard('link', values, { ...DEFAULT_SETTINGS, linkText: '[{key}](ftp://files) {summary}' }).html,
+    `<a href="${ORIGIN}/browse/PAY-1">PAY-1 One</a>`);
+});
+
+test('a missing summary leaves no dangling separator or empty link in partial links', () => {
+  const values = ticketValues({ key: 'PAY-1', status: 'Done' }, ORIGIN);
+  const html = (linkText) => buildClipboard('link', values, { ...DEFAULT_SETTINGS, linkText }).html;
+  const a = `<a href="${ORIGIN}/browse/PAY-1">PAY-1</a>`;
+  assert.equal(html('[{key}]({url}) - {summary}'), a);
+  assert.equal(html('{key} - [{summary}]({url})'), a);
+  assert.equal(html('[{key} - {summary}]({url}) ({status})'), `${a} (Done)`);
+});
+
+test('a copied list follows the link text template', () => {
+  const issues = [{ key: 'PAY-1', summary: 'One' }, { key: 'PAY-2', summary: 'Two' }];
+  const list = buildListClipboard('list', issues, ORIGIN, { ...DEFAULT_SETTINGS, linkText: '[{key}]({url}) - {summary}' });
+  assert.equal(list.html, `<ul><li><a href="${ORIGIN}/browse/PAY-1">PAY-1</a> - One</li>`
+    + `<li><a href="${ORIGIN}/browse/PAY-2">PAY-2</a> - Two</li></ul>`);
 });

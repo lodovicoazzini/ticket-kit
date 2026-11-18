@@ -25,6 +25,7 @@ const BADGE = {
   err: { text: '!', color: '#b5382a' },
 };
 const STATUS_ORDER = { OPEN: 0, MERGED: 1, DECLINED: 2 };
+const OPEN_ALL_MAX = 20;
 const EXACT_KEY = /^[A-Za-z][A-Za-z0-9_]*-\d+$/;
 
 // ---------- Entry points ----------
@@ -133,7 +134,8 @@ async function copyBranch(tab, { name, git = false, isNew = true } = {}) {
     }
     const origin = new URL(tab.url).origin;
     const [ticket, settings] = await Promise.all([runInTab(tab.id, readTicket, [key, origin, true]), loadSettings()]);
-    branch = branchName(branchPrefix(ticket?.type, settings), key, ticket?.summary);
+    branch = branchName(branchPrefix(ticket?.type, settings), key, ticket?.summary,
+      { template: settings.branchTemplate, type: ticket?.type });
     missingSummary = !ticket?.summary;
   }
   const text = git ? gitSwitch(branch, isNew) : branch;
@@ -157,7 +159,9 @@ async function branchChoices(tab) {
     ok: true,
     key,
     type: info?.type ?? '',
-    fresh: branchPrefixChoices(info?.type, settings).map((p) => branchName(p, key, info?.summary)),
+    // A template without {prefix} gives the same name for every prefix, so drop the repeats.
+    fresh: [...new Set(branchPrefixChoices(info?.type, settings).map((p) => (
+      branchName(p, key, info?.summary, { template: settings.branchTemplate, type: info?.type }))))],
     existing: dev?.ok ? dev.items : [],
     existingError: dev?.ok ? null : (dev?.error ?? 'Could not read the branches from Jira.'),
   };
@@ -333,7 +337,10 @@ async function pullRequests(tab) {
   return { ok: true, key, items };
 }
 
-/** Exactly one open pull request opens directly. Otherwise the menu shows the list. */
+/**
+ * Exactly one open pull request opens directly. With several, the menu shows the list, or all the
+ * open ones open in tabs when the prShortcut setting says so. With none open, the menu shows the rest.
+ */
 async function openPullRequest(tab) {
   const key = extractKey(tab.url ?? '');
   if (!key) {
@@ -352,6 +359,10 @@ async function openPullRequest(tab) {
   const open = result.items.filter((p) => p.status === 'OPEN');
   if (open.length === 1) {
     await openUrl(open[0].url, tab);
+    return;
+  }
+  if (open.length > 1 && (await loadSettings()).prShortcut === 'all') {
+    await openUrls(open.map((p) => p.url), tab);
     return;
   }
   await openMenu(tab, 'pr');
@@ -413,6 +424,7 @@ async function runMenuAction(tab, action, args) {
     case 'copy-branch': return copyBranch(tab, args);
     case 'copy-list': return copyList(tab, args.format === 'markdown' ? 'markdown' : 'list');
     case 'open-url': return openUrl(args.url, tab);
+    case 'open-urls': return openUrls(args.urls, tab);
     case 'open-keys': return openKeys(keysInText((args.keys ?? []).join(' ')), tab);
     case 'search-text': return openTextSearch(String(args.text ?? ''), tab);
     case 'options': return chrome.runtime.openOptionsPage();
@@ -441,7 +453,8 @@ async function menuContext(tab) {
       link: buildClipboard('link', values, settings).preview,
       markdown: buildClipboard('markdown', values, settings).text,
       url: buildClipboard('url', values, settings).text,
-      branch: branchName(branchPrefix(ticket?.type, settings), key, ticket?.summary),
+      branch: branchName(branchPrefix(ticket?.type, settings), key, ticket?.summary,
+        { template: settings.branchTemplate, type: ticket?.type }),
     };
   }
   return {
@@ -475,6 +488,24 @@ function originOf(url) {
 }
 
 /** Opens a link next to the tab, honouring the address bar's disposition when there is one. */
+/**
+ * Opens each https link in its own tab right after `tab`, in the given order, at most OPEN_ALL_MAX.
+ * The first one comes to the front.
+ */
+async function openUrls(urls, tab) {
+  const list = [...new Set((Array.isArray(urls) ? urls : []).filter((u) => /^https:\/\//.test(u ?? '')))];
+  for (const [i, url] of list.slice(0, OPEN_ALL_MAX).entries()) {
+    await chrome.tabs.create({
+      url,
+      active: i === 0,
+      ...(tab ? { windowId: tab.windowId, index: tab.index + 1 + i, openerTabId: tab.id } : {}),
+    });
+  }
+  if (list.length > OPEN_ALL_MAX && tab) {
+    await notify(tab.id, 'warn', `Opened the first ${OPEN_ALL_MAX} of ${list.length}`, 'Open the others from the list.');
+  }
+}
+
 async function openUrl(url, tab, disposition = 'newForegroundTab') {
   if (!/^https:\/\//.test(url ?? '')) throw new Error('Refusing to open a link that is not https');
   if (disposition === 'currentTab' && tab) {

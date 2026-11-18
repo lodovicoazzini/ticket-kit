@@ -18,6 +18,7 @@ const ICON = {
   list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
   open: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  tabs: '<rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 4h11a2 2 0 0 1 2 2v11"/>',
   gear: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
 };
 
@@ -25,6 +26,7 @@ let ctx = null;           // from the service worker: key, ticket previews, sear
 let shortcuts = {};       // command name -> shortcut text
 let level = 'root';       // 'root' | 'branch' | 'pr'
 let active = 0;
+let moved = false;        // the user moved the selection since the list last changed
 let flat = [];
 let branches = null;
 let prs = null;
@@ -178,14 +180,23 @@ function prModel(q) {
   if (!prs.ok) return [{ title: '', items: [], note: prs.error, err: true }];
   if (!prs.items.length) return [{ title: '', items: [], note: `No pull request linked to ${prs.key}.` }];
   const toks = tokens(q);
+  const shown = prs.items.filter((p) => !toks.length || matches(`${p.id} ${p.name} ${p.source} ${p.dest} ${p.repo} ${p.status}`, toks));
   const groups = [['OPEN', 'Open'], ['MERGED', 'Merged'], ['DECLINED', 'Declined']].map(([status, label]) => ({ status, label }));
   const known = new Set(groups.map((g) => g.status));
   groups.push({ status: null, label: 'Other' });
-  return groups.map((g) => ({
+  // Opens whatever the list shows, so typing "open" or a repo name first narrows what opens.
+  // skip: Enter on a fresh list still opens the first pull request, not all of them.
+  const openAll = shown.length >= 2 ? [{
+    title: '',
+    items: [{
+      icon: 'tabs', title: `Open all ${shown.length} shown`, sub: 'Each in a new tab next to this one', kbd: '⇧↵',
+      skip: true, openAll: true, run: () => run('open-urls', { urls: shown.map((p) => p.url) }),
+    }],
+  }] : [];
+  return [...openAll, ...groups.map((g) => ({
     title: g.label,
-    items: prs.items
+    items: shown
       .filter((p) => (g.status ? p.status === g.status : !known.has(p.status)))
-      .filter((p) => !toks.length || matches(`${p.id} ${p.name} ${p.source} ${p.dest} ${p.repo}`, toks))
       .map((p) => ({
         icon: 'pr',
         title: `#${p.id}  ${p.name}`,
@@ -195,7 +206,7 @@ function prModel(q) {
         pill: [String(p.status).toLowerCase(), p.status || 'Unknown'],
         run: () => run('open-url', { url: p.url }),
       })),
-  }));
+  }))];
 }
 
 function formatDate(iso) {
@@ -266,6 +277,7 @@ function render() {
     empty.textContent = `Nothing matches "${q.trim()}". Try a ticket key, or fewer words.`;
     list.append(empty);
   }
+  if (!moved) active = Math.max(0, flat.findIndex((item) => !item.skip));
   if (active >= flat.length) active = Math.max(0, flat.length - 1);
   renderChrome();
   markActive(true);
@@ -313,7 +325,7 @@ function itemElement(item, idx, toks) {
     right.append(chev);
   }
   el.append(ico, main, right);
-  el.addEventListener('mousemove', () => { if (active !== idx) { active = idx; markActive(false); } });
+  el.addEventListener('mousemove', () => { if (active !== idx) { active = idx; moved = true; markActive(false); } });
   el.addEventListener('click', (e) => { active = idx; activate({ alt: e.altKey }); });
   return el;
 }
@@ -357,7 +369,7 @@ function renderChrome() {
     ? [['↑↓', 'move'], ['↵', 'run'], ['→', 'more choices'], ['esc', 'close']]
     : level === 'branch'
       ? [['↵', 'copy name'], ['⌥↵', 'copy git command'], ['esc', 'back']]
-      : [['↵', 'open in a new tab'], ['esc', 'back']];
+      : [['↵', 'open in a new tab'], ['⇧↵', 'open all shown'], ['esc', 'back']];
   const foot = $('foot');
   foot.textContent = '';
   for (const [key, label] of hints) {
@@ -394,6 +406,7 @@ function activate(opts) {
 function enterLevel(next) {
   level = next;
   active = 0;
+  moved = false;
   $('q').value = '';
   $('list').scrollTop = 0;
   render();
@@ -410,6 +423,7 @@ function enterLevel(next) {
 
 function onInput() {
   active = 0;
+  moved = false;
   const query = $('q').value.trim();
   if (level === 'root' && query.length >= 2 && !EXACT_KEY.test(query) && picker.query !== query) {
     picker = { query, items: [], loading: true };
@@ -431,10 +445,13 @@ function wireEvents() {
     if (e.target !== $('q') && e.key.length === 1 && !e.metaKey && !e.ctrlKey) focusInput();
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (flat.length) { active = (active + 1) % flat.length; markActive(true); }
+      if (flat.length) { active = (active + 1) % flat.length; moved = true; markActive(true); }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (flat.length) { active = (active - 1 + flat.length) % flat.length; markActive(true); }
+      if (flat.length) { active = (active - 1 + flat.length) % flat.length; moved = true; markActive(true); }
+    } else if (e.key === 'Enter' && e.shiftKey && level === 'pr') {
+      e.preventDefault();
+      flat.find((item) => item.openAll)?.run();
     } else if (e.key === 'Enter') {
       e.preventDefault();
       activate({ alt: e.altKey });

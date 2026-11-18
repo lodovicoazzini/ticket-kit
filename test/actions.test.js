@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  branchName, branchPrefix, branchPrefixChoices, buildListClipboard, cleanPrefix, escapeXml, extractSearch, gitSwitch,
-  isJiraCloudHost, keysInText, keysJql, parseBranchRules, searchUrl, siteOrigin, slugify, textSearchJql,
+  BRANCH_PLACEHOLDERS, branchName, branchPrefix, branchPrefixChoices, buildListClipboard, cleanBranchName, cleanPrefix,
+  escapeXml, extractSearch, gitSwitch, isJiraCloudHost, keysInText, keysJql, parseBranchRules, searchUrl, siteOrigin,
+  slugify, textSearchJql, unknownPlaceholders,
 } from '../lib/format.js';
 
 const ORIGIN = 'https://your-team.atlassian.net';
@@ -58,6 +59,36 @@ test('branch names and git commands', () => {
   assert.equal(branchName('team/fix/', 'PAY-1', 'x'), 'team/fix/PAY-1-x');
   assert.equal(gitSwitch('feature/PAY-1-x', true), 'git switch -c feature/PAY-1-x');
   assert.equal(gitSwitch('feature/PAY-1-x', false), 'git switch feature/PAY-1-x');
+});
+
+test('branch name templates', () => {
+  const summary = 'Refund export skips orders with an ampersand';
+  const name = (template, prefix = 'bugfix', type = 'Bug') => branchName(prefix, 'PAY-1284', summary, { template, type });
+  assert.equal(name('{prefix}/{key}-{summary}'), 'bugfix/PAY-1284-refund-export-skips-orders-with-an');
+  assert.equal(name(''), 'bugfix/PAY-1284-refund-export-skips-orders-with-an');
+  assert.equal(name('{prefix}/{key}'), 'bugfix/PAY-1284');
+  assert.equal(name('{key}_{summary}'), 'PAY-1284_refund-export-skips-orders-with-an');
+  assert.equal(name('{type}/{key}', 'x', 'User Story'), 'user-story/PAY-1284');
+  assert.equal(name('payments/{prefix}/{key}'), 'payments/bugfix/PAY-1284');
+});
+
+test('branch name templates drop the separator next to an empty value', () => {
+  const name = (template, prefix, type = '') => branchName(prefix, 'PAY-1', 'One two', { template, type });
+  assert.equal(name('{prefix}/{key}-{summary}', ''), 'PAY-1-one-two');
+  assert.equal(name('payments/{prefix}/{key}', ''), 'payments/PAY-1');
+  assert.equal(name('{key}-{type}_{summary}', 'x'), 'PAY-1-one-two');
+  assert.equal(branchName('fix', 'PAY-1', '', { template: '{prefix}/{key}_{summary}' }), 'fix/PAY-1');
+  assert.equal(name('{prefix}', ''), 'PAY-1');
+});
+
+test('branch names lose what git refuses', () => {
+  assert.equal(cleanBranchName('my branch~/PAY-1..one'), 'my-branch/PAY-1.one');
+  assert.equal(cleanBranchName('a//b'), 'a/b');
+  assert.equal(cleanBranchName('/.a-'), 'a');
+  assert.equal(cleanBranchName('PAY-1.lock'), 'PAY-1-lock');
+  assert.equal(cleanBranchName('x@{y}^:?*[z]\\w'), 'x-y-z-w');
+  assert.equal(branchName('bugfix', 'PAY-1', 'x', { template: '{prefix}/{nope}-{key}' }), 'bugfix/nope-PAY-1');
+  assert.deepEqual(unknownPlaceholders('{prefix}/{key}-{url}', BRANCH_PLACEHOLDERS), ['url']);
 });
 
 test('keysInText finds keys in order without duplicates and ignores lowercase', () => {
