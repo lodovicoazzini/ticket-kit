@@ -1,5 +1,7 @@
 # Chrome Web Store listing: Ticket Kit
 
+Live listing: https://chromewebstore.google.com/detail/ticket-kit/pgjdhibiaciajnapbghgipafjdobmikj
+
 Text to paste into the Chrome Web Store developer dashboard, field by field.
 Images are in `store/images/`. Rebuild them with `npm run screenshots`, rebuild the upload zip with `npm run package`.
 
@@ -98,9 +100,11 @@ Certify all three statements:
 - [ ] Open the privacy policy URL above in a private window to check it loads without logging in.
 - [ ] Register the developer account with your personal Google account at `chrome.google.com/webstore/devconsole`.
       Google charges a one-time fee of 5 US dollars and requires 2-step verification.
-- [ ] Trader declaration (EU rules): a free extension published by a private person is usually "non-trader". A trader's
-      name, address, phone and email are shown on the listing; a non-trader's are not.
-- [ ] Set a publisher display name and verify the contact email in the account settings.
+- [ ] Trader declaration (EU rules): a free extension published by a private person is usually "non-trader".
+- [ ] Account page: whatever the trader declaration, the listing shows the contact email and the physical address from
+      the account settings. Use an address you're happy to publish, and leave the physical address empty: Google
+      requires it only for items that sell something.
+- [ ] Set the publisher name. It appears under "Offered by"; without one the store shows the account's email address.
 - [ ] Check that your employment contract lets you publish something you built at work under your own name.
 - [ ] `npm test`, then `npm run package`, and upload `dist/ticket-kit-<version>.zip`.
 - [ ] For each update, raise `version` in `manifest.json` before packaging. The store rejects a version it has already seen.

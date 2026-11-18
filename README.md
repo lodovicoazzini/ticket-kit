@@ -31,7 +31,8 @@ browser's extension shortcuts page (`chrome://extensions/shortcuts`).
 
 ## Install
 
-From the Chrome Web Store: *link once published*. Bugs and ideas: [open an issue](https://github.com/lodovicoazzini/ticket-kit/issues).
+From the [Chrome Web Store](https://chromewebstore.google.com/detail/ticket-kit/pgjdhibiaciajnapbghgipafjdobmikj).
+Bugs and ideas: [open an issue](https://github.com/lodovicoazzini/ticket-kit/issues).
 
 From source:
 
